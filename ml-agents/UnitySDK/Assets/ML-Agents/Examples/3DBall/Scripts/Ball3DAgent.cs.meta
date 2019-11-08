@@ -1,10 +1,11 @@
 fileFormatVersion: 2
 guid: aaba48bf82bee4751aa7b89569e57f73
-timeCreated: 1502223572
-licenseType: Free
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - brain: {fileID: 11400000, guid: 383c589e8bb76464eadc2525b5b0f2c1, type: 2}
+  - ball: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
