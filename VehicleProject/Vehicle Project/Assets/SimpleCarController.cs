@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+/*
 [System.Serializable]
 public class AxleInfo {
     public WheelCollider leftWheel;
@@ -9,7 +10,7 @@ public class AxleInfo {
     public bool motor;
     public bool steering;
 }
-     
+*/     
 public class SimpleCarController : MonoBehaviour {
     public List<AxleInfo> axleInfos; 
     public float maxMotorTorque;

@@ -168,6 +168,7 @@
      <Compile Include="Assets\SimpleCarController.cs" />
      <Compile Include="Assets\VehicleAcademy.cs" />
      <Compile Include="Assets\VehicleAgent.cs" />
+     <Compile Include="Assets\VehiclePhysics.cs" />
      <None Include="Assets\ML-Agents\Plugins\Barracuda.Core\Barracuda\Resources\Experimental.compute" />
      <None Include="Assets\ML-Agents\Plugins\Barracuda.Core\Barracuda\Resources\Conv.compute" />
      <None Include="Assets\ML-Agents\Plugins\Barracuda.Core\Barracuda\Resources\Random.cginc" />
