@@ -23,6 +23,10 @@ default:
             strength: 1.0
             gamma: 0.99
 
+VehicleLearning:
+    normalize: false
+    max_steps: 5.0e7
+
 FoodCollectorLearning:
     normalize: false
     beta: 5.0e-3

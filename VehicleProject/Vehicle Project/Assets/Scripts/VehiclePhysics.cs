@@ -38,10 +38,18 @@ public class VehiclePhysics : MonoBehaviour {
 
     public float maxMotorTorque;
     public float maxSteeringAngle;
+    public float maxBrakeTorque;
     public Rigidbody vehicleBody;
-     
+
+    private float motorToApply;
+    private float brakeToApply;
+    private float steeringToApply;
+
     public void Start() {
         vehicleBody = this.GetComponent<Rigidbody>();
+        motorToApply = 0;
+        steeringToApply = 0;
+        brakeToApply = 0;
     }
 
     // finds the corresponding visual wheel
@@ -63,18 +71,31 @@ public class VehiclePhysics : MonoBehaviour {
     }
 
     public void ApplyMotor(float applyTorque, float applySteering) {
-        float motor = maxMotorTorque * applyTorque;
-        float steering = maxSteeringAngle * applySteering;
-     
+        if (applyTorque >= 0f) {
+            brakeToApply = 0f;
+            motorToApply = maxMotorTorque * applyTorque;
+        }
+        else {
+            brakeToApply = maxBrakeTorque;
+            motorToApply = 0f;
+        }
+        
+
+        steeringToApply = maxSteeringAngle * applySteering;
+    }
+
+    public void FixedUpdate() {
         foreach (AxleInfo axleInfo in axleInfos) {
             if (axleInfo.steering) {
-                axleInfo.leftWheel.steerAngle = steering;
-                axleInfo.rightWheel.steerAngle = steering;
+                axleInfo.leftWheel.steerAngle = steeringToApply;
+                axleInfo.rightWheel.steerAngle = steeringToApply;
             }
             if (axleInfo.motor) {
-                axleInfo.leftWheel.motorTorque = motor;
-                axleInfo.rightWheel.motorTorque = motor;
+                axleInfo.leftWheel.motorTorque = motorToApply;
+                axleInfo.rightWheel.motorTorque = motorToApply;
             }
+            axleInfo.leftWheel.brakeTorque = brakeToApply;
+            axleInfo.rightWheel.brakeTorque = brakeToApply;
             ApplyLocalPositionToVisuals(axleInfo.leftWheel);
             ApplyLocalPositionToVisuals(axleInfo.rightWheel);
         }

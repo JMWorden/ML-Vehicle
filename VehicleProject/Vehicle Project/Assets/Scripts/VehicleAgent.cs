@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using MLAgents;
 
 public class VehicleAgent : Agent {
@@ -21,15 +22,20 @@ public class VehicleAgent : Agent {
     private float SpeedTolerance = 5f;
 
     [SerializeField]
+    private float StepPenaltyInterval = 100f;
+
+    [SerializeField]
     private Bounds WorldBounds;
 
     private float prevDistance;
+    private float steps;
 
     private VehiclePhysics vehiclePhys;
 
-    public void Start() {
+    public override void InitializeAgent() {
         vehiclePhys = GetComponent<VehiclePhysics>();
         prevDistance = Vector3.Distance(this.transform.position, Goal.transform.position);
+        steps = 0;
     }
 
     public override void CollectObservations() {
@@ -46,8 +52,8 @@ public class VehicleAgent : Agent {
         AddVectorObs(normalizedVehicleRot.y);
 
         // Rotation.x, Rotation.z will specify if car is flipped over
-        AddVectorObs(normalizedVehicleRot.z);
-        AddVectorObs(normalizedVehicleRot.x);
+        //AddVectorObs(normalizedVehicleRot.z);
+        //AddVectorObs(normalizedVehicleRot.x);
 
         foreach (ProximitySensor sensor in vehiclePhys.proxSensors) {
             // Distance from object normalized to [0, 1]
@@ -65,7 +71,13 @@ public class VehicleAgent : Agent {
         //  0: Motor torque
         //  1: Steering
         vehiclePhys.ApplyMotor(Mathf.Clamp(vectorAction[0], -1, 1), Mathf.Clamp(vectorAction[1], -1, 1));
-        //Debug.Log("[" + vectorAction[0] + ", " + vectorAction[1] + "] [" + Mathf.Clamp(vectorAction[0], -1, 1) + ", " + Mathf.Clamp(vectorAction[1], -1, 1) + "]");
+        //vehiclePhys.FixedUpdate();
+
+        // Penalize at interval of steps
+        if (++steps % StepPenaltyInterval == 0) {
+            Debug.Log("Penalize for time");
+            AddReward(-0.0005f);
+        }
 
         // Compute distance from goal
         float distanceFromGoal = Vector3.Distance(this.transform.position, Goal.transform.position);
@@ -74,6 +86,7 @@ public class VehicleAgent : Agent {
         if (distanceFromGoal < prevDistance) {
             // If vehicle is closer to goal by a meaningful amount (defined by RewardInterval)
             if ((int)(distanceFromGoal / (RewardInterval * 2)) < (int)(prevDistance / (RewardInterval * 2))) {
+                Debug.Log("Reward for distance");
                 AddReward(0.02f); // Reward
                 prevDistance = distanceFromGoal;
             }
@@ -81,6 +94,7 @@ public class VehicleAgent : Agent {
         else {
             // If vehicle is farther from goal by a meaningful amount (defined by RewardInterval)
             if ((int)(distanceFromGoal / (RewardInterval * 2)) > (int)(prevDistance / (RewardInterval * 2))) {
+                Debug.Log("Penalize for distance");
                 AddReward(-0.04f); // Penalize
                 prevDistance = distanceFromGoal;
             }
@@ -89,30 +103,45 @@ public class VehicleAgent : Agent {
         // Check if goal state reached
         if (distanceFromGoal <= DistanceTolerance) {
             if (vehiclePhys.vehicleBody.velocity.magnitude <= SpeedTolerance) {
-                // TODO : Reward for speed
+                Debug.Log("Vehicle reached goal!");
+                // TODO : Reward for speed?
                 AddReward(1f);
                 Done();
-
                 return;
             }
         }
 
         // Check if vehicle left world bounds
         if (!WorldBounds.Contains(new Vector3Int((int)transform.position.x, (int)transform.position.y, (int)transform.position.z))) {
+            Debug.Log("Vehicle escaped world bounds");
             AddReward(-1f);
             Done();
             return;
         }
+
+        if (Mathf.Abs(Vector3.Dot(transform.up, Vector3.down)) < 0.125f) {
+            if (Mathf.Abs(Vector3.Dot(transform.right, Vector3.down)) > 0.825f) {
+                Debug.Log("Vehicle banked too much");
+                AddReward(-1f);
+                Done();
+                return;
+            }
+        }
     }
 
     public override void AgentReset() {
-        this.transform.position = new Vector3(0, 0, 0);
         this.vehiclePhys.vehicleBody.velocity = Vector3.zero;
         this.vehiclePhys.vehicleBody.angularVelocity = Vector3.zero;
+        this.transform.position = new Vector3(0, 0, 0);
+        this.transform.rotation = Quaternion.Euler(0, 180, 0);
+        this.vehiclePhys.Start();
+        
+        this.steps = 0;
     }
 
     void OnCollisionEnter(Collision collision) {
         if (collision.collider.gameObject.CompareTag("Obstacle")) {
+            Debug.Log("Vehicle colided with obstacle");
             AddReward(-0.12f);
         }
     }

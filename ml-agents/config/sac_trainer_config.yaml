@@ -24,6 +24,9 @@ default:
             strength: 1.0
             gamma: 0.99
 
+VehicleLearning:
+    normalize: false
+
 FoodCollectorLearning:
     normalize: false
     batch_size: 256
