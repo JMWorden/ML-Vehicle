@@ -4435,8 +4435,8 @@ MonoBehaviour:
     timeScale: 100
     targetFrameRate: -1
   m_InferenceConfiguration:
-    width: 80
-    height: 80
+    width: 1920
+    height: 1080
     qualityLevel: 5
     timeScale: 1
     targetFrameRate: 60

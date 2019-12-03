@@ -137,7 +137,7 @@ a1ec435616f7033c362e5fbfe41492c7 Assembly-CSharp.dll:.PyramidArea
 b8a5e8091ab0b8861d2add371082c5e0 Unity.TextMeshPro.dll:TMPro.TMP_SpriteAsset
 b1a500449f4ef21f31d1802f6b38e368 Assembly-CSharp.dll:MLAgents.TargetContact
 53b94d92e027cf8d25b27b6cdbbadc73 Assembly-CSharp.dll:.FoodCollectorAgent
-e58ce1812495664a8bd2815edb2b1a36 Assembly-CSharp.dll:.VehiclePhysics
+7a6c04c4b9b3064bda27af28dd995904 Assembly-CSharp.dll:.VehiclePhysics
 eff17c034b917bbca3273c9b028d6846 Assembly-CSharp.dll:.WallJumpAgent
 0be044d599f931ccffe2534904e3e625 Assembly-CSharp.dll:.SoccerBallController
 8e5750ad10b0567929995a0473923807 Assembly-CSharp.dll:.HitWall
