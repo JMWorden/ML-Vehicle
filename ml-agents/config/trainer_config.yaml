@@ -25,7 +25,56 @@ default:
 
 VehicleLearning:
     normalize: false
-    max_steps: 5.0e7
+    max_steps: 1.0e8
+    num_layers: 3
+    lambd: 0.945
+    time_horizon: 1024
+    beta: 8.5e-3
+    num_epoch: 4
+    hidden_units: 512
+    batch_size: 2048
+    buffer_size: 40960
+    learning_rate: 2.5e-4
+    reward_signals:
+        extrinsic:
+            strength: 1.0
+            gamma: 0.99
+        curiosity:
+            strength: 0.01
+            gamma: 0.99
+            encoding_size: 256
+
+PREV_BIG_VehicleLearning:
+    normalize: false
+    max_steps: 1.0e7
+    num_layers: 3
+    lambd: 0.925
+    time_horizon: 48
+    num_epoch: 4
+    reward_signals:
+        extrinsic:
+            strength: 1.0
+            gamma: 0.99
+        curiosity:
+            strength: 0.01
+            gamma: 0.99
+            encoding_size: 256
+
+OLD_VehicleLearning:
+    normalize: false
+    max_steps: 1.0e7
+    num_layers: 3
+    lambd: 0.925
+    buffer_size: 163840
+    reward_signals:
+        extrinsic:
+            strength: 1.0
+            gamma: 0.99
+        curiosity:
+            strength: 0.01
+            gamma: 0.99
+            encoding_size: 256            
+    
 
 FoodCollectorLearning:
     normalize: false

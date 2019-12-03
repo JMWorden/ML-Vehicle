@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using MLAgents;
 
 public class VehicleAgent : Agent {
@@ -9,9 +8,12 @@ public class VehicleAgent : Agent {
     [SerializeField]
     private Transform Goal;
 
+    [SerializeField] 
+    private SpawnAreaManager SpawnManager;
+
     [SerializeField]
     // Reward every "RewardInterval" units from "Goal"
-    private float RewardInterval = 3f;
+    private float RewardInterval = 0.5f;
 
     [SerializeField]
     // Acceptable distance from "Goal" that is still a solution.
@@ -29,13 +31,16 @@ public class VehicleAgent : Agent {
 
     private float prevDistance;
     private float steps;
+    private float distanceReward;
 
     private VehiclePhysics vehiclePhys;
 
     public override void InitializeAgent() {
         vehiclePhys = GetComponent<VehiclePhysics>();
-        prevDistance = Vector3.Distance(this.transform.position, Goal.transform.position);
-        steps = 0;
+        vehiclePhys.vehicleBody.centerOfMass = new Vector3(0f, 0.2f, 0.25f);
+        this.distanceReward = 0f;
+        vehiclePhys.distFromGoalX = 0f;
+        vehiclePhys.distFromGoalZ = 0f;
     }
 
     public override void CollectObservations() {
@@ -44,20 +49,23 @@ public class VehicleAgent : Agent {
         // Agent position, y rotation, and velocity
         Vector3 normalizedVehiclePos = NormalizePosition(this.transform.position);
         AddVectorObs(vehiclePhys.vehicleBody.velocity.magnitude); 
-        AddVectorObs(normalizedVehiclePos.x);
-        AddVectorObs(normalizedVehiclePos.z);
+        //AddVectorObs(normalizedVehiclePos.x); //enable for 2.0
+        //AddVectorObs(normalizedVehiclePos.z); //enable for 2.0
+
+        // Distances from goal
+        Vector3 normalizedGoalPos = NormalizePosition(this.Goal.position);
+        vehiclePhys.distFromGoalX = normalizedGoalPos.x - normalizedVehiclePos.x;
+        vehiclePhys.distFromGoalZ = normalizedGoalPos.z - normalizedVehiclePos.z;
+        AddVectorObs(normalizedGoalPos.x - normalizedVehiclePos.x);
+        AddVectorObs(normalizedGoalPos.z - normalizedVehiclePos.z);
 
         Vector3 normalizedVehicleRot = NormalizeRotation(this.transform.rotation);
         // Rotatation.y specifies direction
         AddVectorObs(normalizedVehicleRot.y);
 
-        // Rotation.x, Rotation.z will specify if car is flipped over
-        //AddVectorObs(normalizedVehicleRot.z);
-        //AddVectorObs(normalizedVehicleRot.x);
-
         foreach (ProximitySensor sensor in vehiclePhys.proxSensors) {
             // Distance from object normalized to [0, 1]
-            AddVectorObs(NormalizeValue(sensor.UpdateSensor(this.transform), 0, sensor.getMaxDistance()));
+            AddVectorObs(NormalizeValue(sensor.UpdateSensor(this.transform), 0, sensor.distance));
         }
     }
 
@@ -67,16 +75,16 @@ public class VehicleAgent : Agent {
         if (IsDone())
             return;
 
-        // vectorAction[2]:
+        // vectorAction[3]:
         //  0: Motor torque
         //  1: Steering
-        vehiclePhys.ApplyMotor(Mathf.Clamp(vectorAction[0], -1, 1), Mathf.Clamp(vectorAction[1], -1, 1));
+        //  2: Brake
+        vehiclePhys.ApplyMotor(Mathf.Clamp(vectorAction[0], -1, 1), Mathf.Clamp(vectorAction[1], -1, 1), vectorAction[2]);
         //vehiclePhys.FixedUpdate();
 
         // Penalize at interval of steps
         if (++steps % StepPenaltyInterval == 0) {
-            Debug.Log("Penalize for time");
-            AddReward(-0.0005f);
+            AddReward(-0.001f);
         }
 
         // Compute distance from goal
@@ -86,29 +94,30 @@ public class VehicleAgent : Agent {
         if (distanceFromGoal < prevDistance) {
             // If vehicle is closer to goal by a meaningful amount (defined by RewardInterval)
             if ((int)(distanceFromGoal / (RewardInterval * 2)) < (int)(prevDistance / (RewardInterval * 2))) {
-                Debug.Log("Reward for distance");
-                AddReward(0.02f); // Reward
+                AddReward(0.0035f); // Reward
+                distanceReward += 0.0035f;
                 prevDistance = distanceFromGoal;
             }
         }
         else {
             // If vehicle is farther from goal by a meaningful amount (defined by RewardInterval)
             if ((int)(distanceFromGoal / (RewardInterval * 2)) > (int)(prevDistance / (RewardInterval * 2))) {
-                Debug.Log("Penalize for distance");
-                AddReward(-0.04f); // Penalize
+                AddReward(-0.0035f); // Penalize
+                distanceReward += -0.0035f;
                 prevDistance = distanceFromGoal;
             }
         }
 
         // Check if goal state reached
         if (distanceFromGoal <= DistanceTolerance) {
-            if (vehiclePhys.vehicleBody.velocity.magnitude <= SpeedTolerance) {
-                Debug.Log("Vehicle reached goal!");
-                // TODO : Reward for speed?
-                AddReward(1f);
-                Done();
-                return;
+            float reward = 1f;
+            if (vehiclePhys.vehicleBody.velocity.magnitude > SpeedTolerance) {
+                reward -= NormalizeValue(vehiclePhys.vehicleBody.velocity.magnitude, SpeedTolerance, 300);
             }
+            Debug.Log("Vehicle reached goal! Rewarded with " + reward);
+            AddReward(reward);
+            Done();
+            return;
         }
 
         // Check if vehicle left world bounds
@@ -118,31 +127,39 @@ public class VehicleAgent : Agent {
             Done();
             return;
         }
-
-        if (Mathf.Abs(Vector3.Dot(transform.up, Vector3.down)) < 0.125f) {
-            if (Mathf.Abs(Vector3.Dot(transform.right, Vector3.down)) > 0.825f) {
-                Debug.Log("Vehicle banked too much");
-                AddReward(-1f);
-                Done();
-                return;
-            }
-        }
     }
 
     public override void AgentReset() {
+        Debug.Log("Done. Agent distance reward: " + distanceReward);
+        // Reset vehicle and move to random location and rotation
         this.vehiclePhys.vehicleBody.velocity = Vector3.zero;
         this.vehiclePhys.vehicleBody.angularVelocity = Vector3.zero;
-        this.transform.position = new Vector3(0, 0, 0);
-        this.transform.rotation = Quaternion.Euler(0, 180, 0);
+        this.transform.position = SpawnManager.getSpawnPoint();
+        this.transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
         this.vehiclePhys.Start();
+
+        this.Goal.transform.position = SpawnManager.getSpawnPoint();
+        Debug.Log("Spawned vehicle at " + this.transform.position + ". goal at " + this.Goal.transform.position);
         
+        this.prevDistance = Vector3.Distance(this.transform.position, Goal.transform.position);
         this.steps = 0;
+
+        if (this.Goal.position != this.Goal.transform.position) {
+            Debug.Log("Logic error");
+        }
+
+        this.distanceReward = 0f;
+        Vector3 normalizedVehiclePos = NormalizePosition(this.transform.position);
+        Vector3 normalizedGoalPos = NormalizePosition(this.Goal.position);
+        vehiclePhys.distFromGoalX = normalizedGoalPos.x - normalizedVehiclePos.x;
+        vehiclePhys.distFromGoalZ = normalizedGoalPos.z - normalizedVehiclePos.z;
     }
 
     void OnCollisionEnter(Collision collision) {
         if (collision.collider.gameObject.CompareTag("Obstacle")) {
-            Debug.Log("Vehicle colided with obstacle");
-            AddReward(-0.12f);
+            Debug.Log("Vehicle collided with obstacle");
+            AddReward(-0.5f);
+            Done();
         }
     }
 
@@ -165,5 +182,10 @@ public class VehicleAgent : Agent {
     // Normalizes val to [0, 1]
     private float NormalizeValue(float val, float min, float max) {
         return (val - min)/(max - min);
+    }
+
+    void OnDrawGizmos() {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(WorldBounds.center, WorldBounds.size);
     }
 }

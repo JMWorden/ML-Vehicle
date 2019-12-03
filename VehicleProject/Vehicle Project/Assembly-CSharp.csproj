@@ -164,6 +164,7 @@
      <Compile Include="Assets\ML-Agents\Scripts\Startup.cs" />
      <Compile Include="Assets\ML-Agents\Scripts\UnityAgentsException.cs" />
      <Compile Include="Assets\ML-Agents\Scripts\Utilities.cs" />
+     <Compile Include="Assets\Scripts\SpawnAreaManager.cs" />
      <Compile Include="Assets\Scripts\VehicleAcademy.cs" />
      <Compile Include="Assets\Scripts\VehicleAgent.cs" />
      <Compile Include="Assets\Scripts\VehiclePhysics.cs" />

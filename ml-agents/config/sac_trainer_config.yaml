@@ -26,6 +26,8 @@ default:
 
 VehicleLearning:
     normalize: false
+    num_layers: 3
+    max_steps: 1e7
 
 FoodCollectorLearning:
     normalize: false

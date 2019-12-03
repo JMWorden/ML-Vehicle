@@ -141,6 +141,7 @@ e58ce1812495664a8bd2815edb2b1a36 Assembly-CSharp.dll:.VehiclePhysics
 eff17c034b917bbca3273c9b028d6846 Assembly-CSharp.dll:.WallJumpAgent
 0be044d599f931ccffe2534904e3e625 Assembly-CSharp.dll:.SoccerBallController
 8e5750ad10b0567929995a0473923807 Assembly-CSharp.dll:.HitWall
+f0bd85434275b3064c9575999ed39228 Assembly-CSharp.dll:.SpawnAreaManager
 d90f785bb49afb4cca1c9ea0001b3a42 Assembly-CSharp.dll:MLAgents.RandomDecision
 422f48e4fe97392f35c9dde63be9e292 Barracuda.dll:Barracuda.NNModel
 b3ab2106268377ffe25dd18ac23dca28 Unity.TextMeshPro.dll:TMPro.TMP_Asset
@@ -172,7 +173,7 @@ e0ee4b3d4e27318934cc940a969d3d96 UnityEngine.Networking.dll:UnityEngine.Networki
 ad9173d3a69d99153f38ed4b62226129 UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransform
 9b895dcabbc1faf095c000c32d471fd0 UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransformChild
 5887ef1bc706b22b773d253fd443ceef UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransformVisualizer
-7816c551d4f9cc0606d97131f31081cb Assembly-CSharp.dll:.VehicleAgent
+e315dffc23b6524a8bee11d13374b313 Assembly-CSharp.dll:.VehicleAgent
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:MLAgents.Area
 f2a2baa50a2e50ed1b78530c56ef697e Assembly-CSharp.dll:.TemplateAcademy
 0dfe73920a499b5b8f3ac9f9e5933980 Assembly-CSharp.dll:.CrawlerAgent

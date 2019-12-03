@@ -17,18 +17,16 @@ public class ProximitySensor {
 
     public float UpdateSensor(Transform origin) {
         RaycastHit hit;
-        if (Physics.Raycast(origin.position, direction.normalized, out hit, distance)) {
-            Debug.DrawRay(origin.position, direction.normalized * hit.distance, Color.red);
+        Vector3 relativeDirection = origin.TransformVector(direction);
+        relativeDirection.y = direction.y;
+        if (Physics.Raycast(origin.position, relativeDirection.normalized, out hit, distance)) {
+            Debug.DrawRay(origin.position, relativeDirection.normalized * hit.distance, Color.red);
         }
         else {
-            Debug.DrawRay(origin.position, direction.normalized * distance, Color.green);
+            Debug.DrawRay(origin.position, relativeDirection.normalized * distance, Color.green);
             return distance;
         }
         return hit.distance;
-    }
-
-    public float getMaxDistance() {
-        return distance;
     }
 }
      
@@ -44,6 +42,9 @@ public class VehiclePhysics : MonoBehaviour {
     private float motorToApply;
     private float brakeToApply;
     private float steeringToApply;
+
+    public float distFromGoalX;
+    public float distFromGoalZ;
 
     public void Start() {
         vehicleBody = this.GetComponent<Rigidbody>();
@@ -70,17 +71,21 @@ public class VehiclePhysics : MonoBehaviour {
         visualWheel.transform.rotation = rotation;
     }
 
-    public void ApplyMotor(float applyTorque, float applySteering) {
+    public void ApplyMotor(float applyTorque, float applySteering, float applyBrake) {
+        if (applyBrake > 0f) {
+            brakeToApply = maxBrakeTorque;
+        }
+        else {
+            brakeToApply = 0;
+        }
+
+        // Vehicle moves slower in reverse
         if (applyTorque >= 0f) {
-            brakeToApply = 0f;
             motorToApply = maxMotorTorque * applyTorque;
         }
         else {
-            brakeToApply = maxBrakeTorque;
-            motorToApply = 0f;
+            motorToApply = -1500;
         }
-        
-
         steeringToApply = maxSteeringAngle * applySteering;
     }
 
@@ -99,5 +104,10 @@ public class VehiclePhysics : MonoBehaviour {
             ApplyLocalPositionToVisuals(axleInfo.leftWheel);
             ApplyLocalPositionToVisuals(axleInfo.rightWheel);
         }
+    }
+
+    void OnGUI() {
+        GUI.Label(new Rect(0,0,Screen.width,Screen.height),"Motor: " + motorToApply
+            + "\nSteering: " + steeringToApply + "\nBrake: " + brakeToApply + "\n\nD(x): " + distFromGoalX + "\nD(z): " + distFromGoalZ);
     }
 }
